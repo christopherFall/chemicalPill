@@ -8,8 +8,13 @@ use Illuminate\Http\Request;
 class MedicineController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
+        if($request->ajax()){
+            $medicines = Medicine::latest()->get();
+            return response()->json(['medicines' => $medicines]);
+        }
+
         $medicines = Medicine::all();
         return view('medicines.index', compact('medicines')); //función compact crea array asociativo
     }
@@ -23,23 +28,25 @@ class MedicineController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'subtype' => 'nullable|string|max:255',
-            'side_effects' => 'nullable|string|max:1000',
+
+        $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'type' => 'required|string|max:255',
+        'subtype' => 'required|string|max:255',
+        'side_effects' => 'required|string',
         ]);
 
-        Medicine::create($request->all());
+        $medicine = Medicine::create($data);
 
-        return redirect()->route('medicines.index');
+        return response()->json(['message' => 'ok', 'medicine' => $medicine], 201);
 
     }
 
 
     public function show(string $id)
     {
-        //
+        $medicine = Medicine::find($id);
+        return response()->json(["medicine" => $medicine]);
     }
 
 
@@ -52,25 +59,30 @@ class MedicineController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'subtype' => 'nullable|string|max:255',
-            'side_effects' => 'nullable|string|max:1000',
+        $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'type' => 'required|string|max:255',
+        'subtype' => 'required|string|max:255',
+        'side_effects' => 'required|string',
         ]);
 
-        $medicine = Medicine::findOrFail($id);
+        $medicine = Medicine::find($id);
 
-        $medicine->update($request->all());
+        $medicine->name = $request->name;
+        $medicine->type = $request->type;
+        $medicine->subtype = $request->subtype;
+        $medicine->side_effects = $request->side_effects;
+        $medicine->save();
 
-        return redirect()->route('medicines.index');
+
+        return response()->json(["success" =>$medicine]);
     }
 
 
     public function destroy(string $id)
     {
-       $medicine = Medicine::findOrFail($id);
+       $medicine = Medicine::find($id);
        $medicine->delete();
-       return redirect()->route('medicines.index');
+       return response()->json(["success" => 1]);
     }
 }

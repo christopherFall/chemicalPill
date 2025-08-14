@@ -1,74 +1,259 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="mt-8 font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight text-center">
-            {{ __('Chemical Pill') }}
-        </h2>
-    </x-slot>
+<!-- resources/views/medicines/index.blade.php -->
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-6 lg:p-8">
-                <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Pill</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="card mt-5">
+            <h3 class="card-header p-3">Checmical Pill</h3>
+            <div class="card-body">
+                <button class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#createMedicine">Create Medicine</button>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Subtype</th>
+                            <th>Side Effects</th>
+                            <th width="250px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicineList">
 
-                    <div class="mb-4">
-                        <a href="{{ route('medicines.create') }}" class="bg-cyan-500 dark:bg-cyan-700 hover:bg-cyan-600 dark:hover:bg-cyan-800 text-white font-bold py-2 px-4 rounded">Create Medicine</a>
-                    </div>
-
-                    <table class="table-auto w-full">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-2 text-gray-900 dark:text-white text-center">ID</th>
-                                <th class="px-4 py-2 text-gray-900 dark:text-white text-center">NAME</th>
-                                <th class="px-4 py-2 text-gray-900 dark:text-white text-center">TYPE</th>
-                                <th class="px-4 py-2 text-gray-900 dark:text-white text-center">SUBTYPE</th>
-                                <th class="px-4 py-2 text-gray-900 dark:text-white text-center">SIDE EFFECTS</th>
-                                <th class="px-4 py-2 text-gray-900 dark:text-white text-center">ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($medicines as $medicine)
-                            <tr>
-                                <td class="border px-4 py-2 text-gray-900 dark:text-white text-center">{{ $medicine->id }}</td>
-                                <td class="border px-4 py-2 text-gray-900 dark:text-white text-center">{{ $medicine->name }}</td>
-                                <td class="border px-4 py-2 text-gray-900 dark:text-white text-center">{{ $medicine->type }}</td>
-                                <td class="border px-4 py-2 text-gray-900 dark:text-white text-center">{{ $medicine->subtype }}</td>
-                                <td class="border px-4 py-2 text-gray-900 dark:text-white text-center">{{ $medicine->side_effects }}</td>
-
-                                <td class="border px-4 py-2 text-center">
-                                    <div class="flex justify-center">
-                                        <a href="{{ route('medicines.edit', $medicine->id) }}" class="bg-violet-500 dark:bg-violet-700 hover:bg-violet-600 dark:hover:bg-violet-800 text-white font-bold py-2 px-4 rounded mr-2">Edit</a>
-                                        <button type="button" class="bg-pink-400 dark:bg-pink-600 hover:bg-pink-500 dark:hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onclick="confirmDelete('{{ $medicine->id }}')">Delete</button>
-
-                                    </div>
-                                </td>
-
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-
-                </div>
-
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-</x-app-layout>
 
+        <!-- Create Medicine Modal -->
+        <div class="modal fade" id="createMedicine" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Create Medicine</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="mt-2">
+                                <label for="name">Name</label>
+                                <input type="text" name="name" id="medicineName" class="form-control">
+                            </div>
+                            <div class="mt-2">
+                                <label for="type">Type</label>
+                                <input type="text" name="type" id="medicineType" class="form-control">
+                            </div>
+                            <div class="mt-2">
+                                <label for="subtype">Subtype</label>
+                                <input type="text" name="subtype" id="medicineSubtype" class="form-control">
+                            </div>
+                            <div class="mt-2">
+                                <label for="side_effects">Side Effects</label>
+                                <textarea type="text" name="side_effects" id="medicineSideEffects" class="form-control"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary create-medicine">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Medicine Modal -->
+        <div class="modal fade" id="editMedicine" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Update Medicine</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <input type="hidden" id="medicine-id">
+                            <div class="mt-2">
+                                <label for="name">Name</label>
+                                <input type="text" name="name" id="medicineName-edit" class="form-control">
+                            </div>
+                            <div class="mt-2">
+                                <label for="type">Type</label>
+                                <input type="text" name="type" id="medicineType-edit" class="form-control">
+                            </div>
+                            <div class="mt-2">
+                                <label for="subtype">Subtype</label>
+                                <input type="text" name="subtype" id="medicineSubtype-edit" class="form-control">
+                            </div>
+                            <div class="mt-2">
+                                <label for="side_effects">Side Effects</label>
+                                <textarea type="text" name="side_effects" id="medicineSideEffects-edit" class="form-control"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary update-medicine">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
 
 <script>
-    function confirmDelete(id) {
-        alertify.confirm("Confirm delete record?",
-        function(){
-            let form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/medicines/' + id;
-                    form.innerHTML = '@csrf @method("DELETE")';
-                    document.body.appendChild(form);
-                    form.submit();
-            alertify.success('Ok');
-        },
-        function(){
-            alertify.error('Cancel');
+    $(document).ready(function(){
+
+        fetchMedicines();
+
+        function fetchMedicines(){
+            $.ajax({
+                type: "GET",
+                url: "/medicines",
+                dataType: 'json',
+                success: function(response){
+                    console.log(response);
+                    let row = "";
+                    $.each(response.medicines, function(key, medicine){
+                        row += `
+                            <tr>
+                                <td>${medicine.id}</td>
+                                <td>${medicine.name}</td>
+                                <td>${medicine.type}</td>
+                                <td>${medicine.subtype}</td>
+                                <td>${medicine.side_effects}</td>
+                                <td>
+                                    <button data-id="${medicine.id}" class="btn btn-primary btn-sm edit-medicine">Edit</button>
+                                    <button data-id="${medicine.id}" class="btn btn-danger btn-sm delete-medicine">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    $("#medicineList").html(row);
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+
+        };
+
+        $("body").on("click", ".delete-medicine", function(){
+            let id = $(this).attr("data-id");
+
+            if(confirm("Are you sure you want to delete this medicine?")){
+                $.ajax({
+                    type: "DELETE",
+                    url: "/medicines/" + id,
+                    data: {_token: $("meta[name='csrf-token']").attr("content")},
+                    dataType: 'json',
+                    success: function(response){
+                        fetchMedicines();
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            }
         });
-    }
+
+        // Edit GET Request
+
+        $("body").on("click", ".edit-medicine", function(){
+            let id = $(this).attr("data-id");
+            $.ajax({
+                type: "GET",
+                url: "/medicines/" + id,
+                dataType: 'json',
+                success: function(response){
+                    console.log(response);
+                    $("#medicine-id").val(response.medicine.id);
+                    $("#medicineName-edit").val(response.medicine.name);
+                    $("#medicineType-edit").val(response.medicine.type);
+                    $("#medicineSubtype-edit").val(response.medicine.subtype);
+                    $("#medicineSideEffects-edit").val(response.medicine.side_effects);
+                    $("#editMedicine").modal("show");
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        // Update Medicine
+
+        $(".update-medicine").click(function(){
+            let formData = {
+                name: $("#medicineName-edit").val(),
+                type: $("#medicineType-edit").val(),
+                subtype: $("#medicineSubtype-edit").val(),
+                side_effects: $("#medicineSideEffects-edit").val(),
+                _token: $("meta[name='csrf-token']").attr("content")
+            };
+
+            $.ajax({
+                type: "PUT",
+                url: "/medicines/" + $("#medicine-id").val(),
+                data: formData,
+                dataType: 'json',
+                success: function(response){
+                    if(response.errors){
+                        $.each(response.errors, function(key, value){
+                            $("#"+key+"-edit").after('<div class="text-danger error-message">'+value[0]+'</div>');
+                        })
+                    } else {
+                        $("#editMedicine").modal('hide');
+                        fetchMedicines();
+                    }
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        // Create Medicine
+
+        $(".create-medicine").click(function(){
+            let formData = {
+                name: $("#medicineName").val(),
+                type: $("#medicineType").val(),
+                subtype: $("#medicineSubtype").val(),
+                side_effects: $("#medicineSideEffects").val(),
+                _token: $("meta[name='csrf-token']").attr("content")
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/medicines",
+                data: formData,
+                dataType: 'json',
+                success: function(response){
+                    if(response.errors){
+                        $.each(response.errors, function(key, value){
+                            $("#"+key).after('<div class="text-danger error-message">'+value[0]+'</div>');
+                        })
+                    } else {
+                        $("#createMedicine").modal('hide');
+                        fetchMedicines();
+                    }
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        });
+    });
 </script>
+</html>
