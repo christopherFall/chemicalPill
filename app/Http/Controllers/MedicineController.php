@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Medicine;
 use Illuminate\Http\Request;
+use App\Http\Requests\MedicineRequest;
 
 class MedicineController extends Controller
 {
@@ -19,37 +20,27 @@ class MedicineController extends Controller
         return view('medicines.index', compact('medicines')); //función compact crea array asociativo
     }
 
-
+    // NOT THIS CASE
     public function create()
     {
         return view('medicines.create');
     }
 
 
-    public function store(Request $request)
+    public function store(MedicineRequest $request)
     {
-
-        $data = $request->validate([
-        'name' => 'required|string|max:255',
-        'type' => 'required|string|max:255',
-        'subtype' => 'required|string|max:255',
-        'side_effects' => 'required|string',
-        ]);
-
-        $medicine = Medicine::create($data);
-
+        $medicine = Medicine::create($request->validated());
         return response()->json(['message' => 'ok', 'medicine' => $medicine], 201);
-
     }
 
 
     public function show(string $id)
     {
-        $medicine = Medicine::find($id);
+        $medicine = Medicine::findorFail($id);
         return response()->json(["medicine" => $medicine]);
     }
 
-
+    // NOT THIS CASE
     public function edit(string $id)
     {
         $medicine = Medicine::findOrFail($id);
@@ -57,31 +48,17 @@ class MedicineController extends Controller
     }
 
 
-    public function update(Request $request, string $id)
+    public function update(MedicineRequest $request, string $id)
     {
-        $data = $request->validate([
-        'name' => 'required|string|max:255',
-        'type' => 'required|string|max:255',
-        'subtype' => 'required|string|max:255',
-        'side_effects' => 'required|string',
-        ]);
-
-        $medicine = Medicine::find($id);
-
-        $medicine->name = $request->name;
-        $medicine->type = $request->type;
-        $medicine->subtype = $request->subtype;
-        $medicine->side_effects = $request->side_effects;
-        $medicine->save();
-
-
-        return response()->json(["success" =>$medicine]);
+        $medicine = Medicine::findOrFail($id);
+        $medicine->update($request->validated());
+        return response()->json(["success" => $medicine]);
     }
 
 
     public function destroy(string $id)
     {
-       $medicine = Medicine::find($id);
+       $medicine = Medicine::findorFail($id);
        $medicine->delete();
        return response()->json(["success" => 1]);
     }
