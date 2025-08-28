@@ -60,6 +60,6 @@ class MedicineController extends Controller
     {
        $medicine = Medicine::findorFail($id);
        $medicine->delete();
-       return response()->json(["success" => 1]);
+       return response()->json(["success" => "The medicine has been deleted succesfully"]);
     }
 }
