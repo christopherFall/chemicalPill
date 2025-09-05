@@ -2,64 +2,60 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Medicine;
 use Illuminate\Http\Request;
 use App\Http\Requests\MedicineRequest;
+use App\UseCases\Contracts\{
+    CreateMedicineUseCaseInterface,
+    GetAllMedicinesUseCaseInterface,
+    ShowMedicineUseCaseInterface,
+    UpdateMedicineUseCaseInterface,
+    DeleteMedicineUseCaseInterface
+};
 
 class MedicineController extends Controller
 {
+    public function __construct(
+        private GetAllMedicinesUseCaseInterface $getAll,
+        private CreateMedicineUseCaseInterface $create,
+        private ShowMedicineUseCaseInterface $showOne,
+        private UpdateMedicineUseCaseInterface $updateOne,
+        private DeleteMedicineUseCaseInterface $deleteOne,
+    ) {}
 
     public function index(Request $request)
     {
-        if($request->ajax()){
-            $medicines = Medicine::latest()->get();
+        if ($request->ajax()) {
+            $medicines = $this->getAll->execute();
             return response()->json(['medicines' => $medicines]);
         }
 
-        $medicines = Medicine::all();
-        return view('medicines.index', compact('medicines')); //función compact crea array asociativo
+        // (tu vista no usa $medicines, pero si quieres mantenerla:)
+        // Verificar el vinculo con la vista blade
+        $medicines = $this->getAll->execute();
+        return view('medicines.index', compact('medicines'));
     }
-
-    // NOT THIS CASE
-    public function create()
-    {
-        return view('medicines.create');
-    }
-
 
     public function store(MedicineRequest $request)
     {
-        $medicine = Medicine::create($request->validated());
+        $medicine = $this->create->execute($request->validated());
         return response()->json(['message' => 'ok', 'medicine' => $medicine], 201);
     }
 
-
     public function show(string $id)
     {
-        $medicine = Medicine::findorFail($id);
+        $medicine = $this->showOne->execute((int) $id);
         return response()->json(["medicine" => $medicine]);
     }
 
-    // NOT THIS CASE
-    public function edit(string $id)
-    {
-        $medicine = Medicine::findOrFail($id);
-        return view('medicines.edit', compact('medicine'));
-    }
-
-
     public function update(MedicineRequest $request, string $id)
     {
-        $medicine = Medicine::findOrFail($id);
-        $medicine->update($request->validated());
+        $medicine = $this->updateOne->execute((int) $id, $request->validated());
         return response()->json(["success" => $medicine]);
     }
 
-
     public function destroy(string $id)
     {
-       $medicine = Medicine::findorFail($id);
-       $medicine->delete();
-       return response()->json(["success" => "The medicine has been deleted succesfully"]);
+        $this->deleteOne->execute((int) $id);
+        return response()->json(["success" => "The medicine has been deleted succesfully"]);
     }
 }
