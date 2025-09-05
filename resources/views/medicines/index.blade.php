@@ -50,7 +50,7 @@
                 </form>
 
                 <!-- Tabla -->
-                    <table data-route="medicine" id="medicinesTable" class="table table-bordered table-striped table-hover">
+                    <table data-route="medicines" id="medicinesTable" class="table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>ID</th>

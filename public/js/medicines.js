@@ -3,7 +3,11 @@ $(function () {
     const deleteModalEl = document.getElementById('deleteConfirmModal');
     const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteModalEl) : null;
 
-    var medicinesTable = null;
+    let medicinesTable = null;
+
+    // 🔑 Ruta base dinámica desde el data-route
+    const routeBase = $("#medicinesTable").data("route"); // "medicine"
+    const apiUrl = `/${routeBase}`; // → "/medicine"
 
     initDataTable();
     clearForm();
@@ -29,8 +33,8 @@ $(function () {
     function initDataTable() {
         medicinesTable = $('#medicinesTable').DataTable({
             ajax: {
-                url: '/medicines',
-                dataSrc: 'medicines' // Laravel debe devolver { medicines: [...] }
+                url: apiUrl,
+                dataSrc: 'medicines'
             },
             columns: [
                 { data: 'id' },
@@ -45,7 +49,7 @@ $(function () {
         $('#medicinesTable tbody')
             .off('dblclick', 'tr')
             .on('dblclick', 'tr', function () {
-                var data = medicinesTable.row(this).data();
+                let data = medicinesTable.row(this).data();
                 if (!data) return;
 
                 $('#medicine-id').val(data.id);
@@ -67,9 +71,9 @@ $(function () {
         }
     }
 
-    // SAVE → Crear
+    // SAVE → Crear podría ser reutilizable para actualizar
     $("#saveMedicineBtn").on('click', function () {
-        sendRequest("/medicines", "POST", getFormData(), function () {
+        sendRequest(apiUrl, "POST", getFormData(), function () {
             showSnackbar("Medicine created successfully", "success");
             clearForm();
             reloadDataTable();
@@ -88,14 +92,14 @@ $(function () {
             showSnackbar("Select a record first", "danger");
             return;
         }
-        sendRequest("/medicines/" + id, "PUT", getFormData(), function () {
+        sendRequest(`${apiUrl}/${id}`, "PUT", getFormData(), function () {
             showSnackbar("Medicine updated successfully", "primary");
             clearForm();
             reloadDataTable();
         });
     });
 
-    // DELETE → Confirmación modal
+    // DELETE → Confirmación modal - más global
     $("#deleteMedicineBtn").on('click', function () {
         let id = $("#medicine-id").val();
         if (!id) {
@@ -109,7 +113,7 @@ $(function () {
         let id = $("#medicine-id").val();
         if (!id) return;
 
-        sendRequest("/medicines/" + id, "DELETE", { _token: $("meta[name='csrf-token']").attr("content") }, function () {
+        sendRequest(`${apiUrl}/${id}`, "DELETE", { _token: $("meta[name='csrf-token']").attr("content") }, function () {
             if (deleteModal) deleteModal.hide();
             showSnackbar("Medicine deleted successfully", "danger");
             clearForm();
