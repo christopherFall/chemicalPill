@@ -2,7 +2,7 @@
 
 namespace App\UseCases\Contracts;
 
-interface DeleteMedicineUseCaseInterface
+interface DeleteEntityUseCaseInterface
 {
     /** @throws \Illuminate\Database\Eloquent\ModelNotFoundException */
     public function execute(int $id): bool;

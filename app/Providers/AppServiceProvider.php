@@ -9,43 +9,51 @@ use Illuminate\Support\Facades\Schema;
 use App\Repositories\Contracts\MedicineRepositoryInterface;
 use App\Repositories\Modules\EloquentMedicineRepository;
 
-// UseCases
+// UseCases (GENÉRICOS)
 use App\UseCases\Contracts\{
-    CreateMedicineUseCaseInterface,
-    GetAllMedicinesUseCaseInterface,
-    ShowMedicineUseCaseInterface,
-    UpdateMedicineUseCaseInterface,
-    DeleteMedicineUseCaseInterface
+    CreateEntityUseCaseInterface,
+    GetAllEntitiesUseCaseInterface,
+    ShowEntityUseCaseInterface,
+    UpdateEntityUseCaseInterface,
+    DeleteEntityUseCaseInterface
 };
 use App\UseCases\Modules\{
-    CreateMedicineUseCase,
-    GetAllMedicinesUseCase,
-    ShowMedicineUseCase,
-    UpdateMedicineUseCase,
-    DeleteMedicineUseCase
+    CreateEntityUseCase,
+    GetAllEntitiesUseCase,
+    ShowEntityUseCase,
+    UpdateEntityUseCase,
+    DeleteEntityUseCase
 };
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        // Repository
+        // Repositorio concreto
         $this->app->bind(MedicineRepositoryInterface::class, EloquentMedicineRepository::class);
 
-        // Use Cases
-        $this->app->bind(CreateMedicineUseCaseInterface::class, CreateMedicineUseCase::class);
-        $this->app->bind(GetAllMedicinesUseCaseInterface::class, GetAllMedicinesUseCase::class);
-        $this->app->bind(ShowMedicineUseCaseInterface::class, ShowMedicineUseCase::class);
-        $this->app->bind(UpdateMedicineUseCaseInterface::class, UpdateMedicineUseCase::class);
-        $this->app->bind(DeleteMedicineUseCaseInterface::class, DeleteMedicineUseCase::class);
+        // Casos de uso genéricos inyectando el repo de Medicine
+        $this->app->bind(CreateEntityUseCaseInterface::class, function ($app) {
+            return new CreateEntityUseCase($app->make(MedicineRepositoryInterface::class));
+        });
+
+        $this->app->bind(GetAllEntitiesUseCaseInterface::class, function ($app) {
+            return new GetAllEntitiesUseCase($app->make(MedicineRepositoryInterface::class));
+        });
+
+        $this->app->bind(ShowEntityUseCaseInterface::class, function ($app) {
+            return new ShowEntityUseCase($app->make(MedicineRepositoryInterface::class));
+        });
+
+        $this->app->bind(UpdateEntityUseCaseInterface::class, function ($app) {
+            return new UpdateEntityUseCase($app->make(MedicineRepositoryInterface::class));
+        });
+
+        $this->app->bind(DeleteEntityUseCaseInterface::class, function ($app) {
+            return new DeleteEntityUseCase($app->make(MedicineRepositoryInterface::class));
+        });
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         Schema::defaultStringLength(191);

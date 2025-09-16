@@ -3,11 +3,38 @@ $(function () {
     const deleteModalEl = document.getElementById('deleteConfirmModal');
     const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteModalEl) : null;
 
-    let medicinesTable = null;
+    let entityTable = null;
 
-    // 🔑 Ruta base dinámica desde el data-route
-    const routeBase = $("#medicinesTable").data("route"); // "medicine"
-    const apiUrl = `/${routeBase}`; // → "/medicine"
+    // 🔑 Ruta base dinámica desde el data-route (ej: "medicine", "user", "product")
+    const routeBase = $("#entityTable").data("route");
+    const apiUrl = `/${routeBase}`;
+
+    // Configuración dinámica (nombres de campos, ids de formularios, etc.)
+    const config = {
+        tableId: "#entityTable",
+        formId: "#entityForm",
+        idField: "#entity-id",
+        fields: {
+            name: "#entityName",
+            type: "#entityType",
+            subtype: "#entitySubtype",
+            side_effects: "#entitySideEffects",
+        },
+        btns: {
+            save: "#saveEntityBtn",
+            clean: "#cleanBtn",
+            change: "#changeBtn",
+            update: "#updateEntityBtn",
+            delete: "#deleteEntityBtn",
+            confirmDelete: "#confirmDeleteBtn"
+        },
+        messages: {
+            created: "Record created successfully",
+            updated: "Record updated successfully",
+            deleted: "Record deleted successfully",
+            select: "Select a record first"
+        }
+    };
 
     initDataTable();
     clearForm();
@@ -29,36 +56,30 @@ $(function () {
         });
     }
 
-    // DataTable
+    // DataTable inicial
     function initDataTable() {
-        medicinesTable = $('#medicinesTable').DataTable({
+        entityTable = $(config.tableId).DataTable({
             ajax: {
                 url: apiUrl,
-                dataSrc: 'medicines'
+                dataSrc: routeBase // la API devuelve { medicines: [] }, { users: [] } → dataSrc dinámico
             },
-            columns: [
-                { data: 'id' },
-                { data: 'name' },
-                { data: 'type' },
-                { data: 'subtype' },
-                { data: 'side_effects' }
-            ]
+            columns: Object.keys(config.fields).map(key => ({ data: key }))
         });
 
-        // Registrar eventos DESPUÉS de crear la tabla
-        $('#medicinesTable tbody')
+        // Doble click para seleccionar fila
+        $(`${config.tableId} tbody`)
             .off('dblclick', 'tr')
             .on('dblclick', 'tr', function () {
-                let data = medicinesTable.row(this).data();
+                let data = entityTable.row(this).data();
                 if (!data) return;
 
-                $('#medicine-id').val(data.id);
-                $('#medicineName').val(data.name);
-                $('#medicineType').val(data.type);
-                $('#medicineSubtype').val(data.subtype);
-                $('#medicineSideEffects').val(data.side_effects);
+                // Cargar datos al form
+                $(config.idField).val(data.id);
+                Object.keys(config.fields).forEach(field => {
+                    $(config.fields[field]).val(data[field]);
+                });
 
-                $('#medicinesTable tbody tr').removeClass('table-active');
+                $(`${config.tableId} tbody tr`).removeClass('table-active');
                 $(this).addClass('table-active');
 
                 toggleButtons({ save: false, clean: true, change: true, update: false, delete: false });
@@ -66,90 +87,86 @@ $(function () {
     }
 
     function reloadDataTable() {
-        if (medicinesTable) {
-            medicinesTable.ajax.reload(null, false); // recarga sin perder paginación
+        if (entityTable) {
+            entityTable.ajax.reload(null, false);
         }
     }
 
-    // SAVE → Crear podría ser reutilizable para actualizar
-    $("#saveMedicineBtn").on('click', function () {
+    // SAVE
+    $(config.btns.save).on('click', function () {
         sendRequest(apiUrl, "POST", getFormData(), function () {
-            showSnackbar("Medicine created successfully", "success");
+            showSnackbar(config.messages.created, "success");
             clearForm();
             reloadDataTable();
         });
     });
 
-    // CHANGE → habilitar Update/Delete
-    $("#changeBtn").on('click', function () {
+    // CHANGE
+    $(config.btns.change).on('click', function () {
         toggleButtons({ save: false, clean: true, change: false, update: true, delete: true });
     });
 
-    // UPDATE → Guardar cambios
-    $("#updateMedicineBtn").on('click', function () {
-        let id = $("#medicine-id").val();
+    // UPDATE
+    $(config.btns.update).on('click', function () {
+        let id = $(config.idField).val();
         if (!id) {
-            showSnackbar("Select a record first", "danger");
+            showSnackbar(config.messages.select, "danger");
             return;
         }
         sendRequest(`${apiUrl}/${id}`, "PUT", getFormData(), function () {
-            showSnackbar("Medicine updated successfully", "primary");
+            showSnackbar(config.messages.updated, "primary");
             clearForm();
             reloadDataTable();
         });
     });
 
-    // DELETE → Confirmación modal - más global
-    $("#deleteMedicineBtn").on('click', function () {
-        let id = $("#medicine-id").val();
+    // DELETE
+    $(config.btns.delete).on('click', function () {
+        let id = $(config.idField).val();
         if (!id) {
-            showSnackbar("Select a record first", "danger");
+            showSnackbar(config.messages.select, "danger");
             return;
         }
         if (deleteModal) deleteModal.show();
     });
 
-    $("#confirmDeleteBtn").on('click', function () {
-        let id = $("#medicine-id").val();
+    $(config.btns.confirmDelete).on('click', function () {
+        let id = $(config.idField).val();
         if (!id) return;
 
         sendRequest(`${apiUrl}/${id}`, "DELETE", { _token: $("meta[name='csrf-token']").attr("content") }, function () {
             if (deleteModal) deleteModal.hide();
-            showSnackbar("Medicine deleted successfully", "danger");
+            showSnackbar(config.messages.deleted, "danger");
             clearForm();
             reloadDataTable();
         });
     });
 
-    // CLEAN → Reiniciar formulario
-    $("#cleanBtn").on('click', function () {
+    // CLEAN
+    $(config.btns.clean).on('click', function () {
         clearForm();
-        $('#medicinesTable tbody tr').removeClass('table-active');
+        $(`${config.tableId} tbody tr`).removeClass('table-active');
     });
 
     // Helpers
     function getFormData() {
-        return {
-            name: $("#medicineName").val(),
-            type: $("#medicineType").val(),
-            subtype: $("#medicineSubtype").val(),
-            side_effects: $("#medicineSideEffects").val(),
-            _token: $("meta[name='csrf-token']").attr("content"),
-        };
+        let data = { _token: $("meta[name='csrf-token']").attr("content") };
+        Object.keys(config.fields).forEach(field => {
+            data[field] = $(config.fields[field]).val();
+        });
+        return data;
     }
 
     function clearForm() {
-        $("#medicineForm")[0].reset();
-        $("#medicine-id").val("");
+        $(config.formId)[0].reset();
+        $(config.idField).val("");
         toggleButtons({ save: true, clean: true, change: false, update: false, delete: false });
     }
 
     function toggleButtons(state) {
-        $("#saveMedicineBtn").prop("disabled", !state.save);
-        $("#cleanBtn").prop("disabled", !state.clean);
-        $("#changeBtn").prop("disabled", !state.change);
-        $("#updateMedicineBtn").prop("disabled", !state.update);
-        $("#deleteMedicineBtn").prop("disabled", !state.delete);
+        Object.keys(config.btns).forEach(key => {
+            $(config.btns[key]).prop("disabled", !state[key]);
+        });
     }
 
     function showSnackbar(message, className) {

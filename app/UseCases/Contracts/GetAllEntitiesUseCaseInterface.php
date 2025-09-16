@@ -4,8 +4,8 @@ namespace App\UseCases\Contracts;
 
 use Illuminate\Support\Collection;
 
-interface GetAllMedicinesUseCaseInterface
+interface GetAllEntitiesUseCaseInterface
 {
-    /** @return Collection<int, \App\Models\Medicine> */
+    /** @return Collection<int, \Illuminate\Database\Eloquent\Model> */
     public function execute(): \Illuminate\Support\Collection;
 }
